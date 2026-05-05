@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ChatBot</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+</head>
+<body>
+    <section id="doc-panel">
+        <h2>Document Management</h2>
+        <section id="upload-form">
+            <form>
+                <h3>Upload Document</h3>
+                <input type="file" id="file-input" accept=".pdf,.txt">
+                <button type="submit" id="upload-btn">Upload</button>
+            </form>
+        </section>
+
+        <section id="uploaded-docs">
+            <h3>Uploaded Documents</h3>
+            <p id="uploaded-docs-placeholder">No documents uploaded yet</p>
+            <ul id="documents-list"></ul>
+        </section>
+    
+        <section id="retrieval-method">
+            <h3>Retrieval Method</h3>
+            <select>
+                <option value="semantic">Semantic (Embeddings)</option>
+                <option value="tfidf">TF-IDF (Keyword)</option>
+            </select>
+        </section>
+    </section>
+
+    <section id="chat-container">
+        <h2>AI Chat</h2>
+        <section id="messages">
+            <!-- <p id="bot-response"></p> -->
+        </section>
+        <form>
+            <input type="text" id="user-input" placeholder="Begin chatting...">
+            <button type="submit" id="send-btn">Send</button>
+        </form>
+    </section>
+
+    <section id="scratchpad">
+        <div id="scratchpad-header">
+            <h2>Scratchpad</h2>
+            <button id="scratchpad-toggle" title="Collapse">−</button>
+        </div>
+        <div id="scratchpad-body">
+            <p id="scratchpad-hint">Type notes, or drag a bot reply in to keep it.</p>
+            <div id="scratchpad-editor"></div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
