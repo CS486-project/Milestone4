@@ -24,7 +24,7 @@ if (prototypeBtn) {
 const taskBtn = document.getElementById('task-btn');
 if (taskBtn) {
     taskBtn.addEventListener('click', () => {
-        alert('Add your task instructions here or link this button to a task page.');
+        window.location.href = `/task.html?participantID=${participantID}&systemID=${systemID}`;
     });
 }
 

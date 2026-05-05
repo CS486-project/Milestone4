@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Your Task</h1>
+
+  <section class="task-scenario">
+    <h2>Scenario</h2>
+    <p>
+      You and three friends are planning a trip to Europe together, but you each
+      have very different priorities. One of you cares most about <strong>nightlife</strong>,
+      another about <strong>history and culture</strong>, another has a
+      <strong>tight budget</strong>, and the last has <strong>dietary restrictions</strong>
+      (e.g., vegetarian or halal).
+    </p>
+    <p>
+      You will use an AI travel assistant to help your group reach a decision
+      everyone can live with.
+    </p>
+  </section>
+
+  <section class="task-goal">
+    <h2>Your Goal</h2>
+    <p>
+      Using the shared travel documents and the AI system, agree on a single European
+      city that works for everyone. Be ready to explain how the destination addresses
+      each person's priority.
+    </p>
+  </section>
+
+  <button id="task-continue-btn" class="workflow-btn" type="button">
+    I have read the task — return to study workflow
+  </button>
+
+  <script>
+    document.getElementById('task-continue-btn').addEventListener('click', () => {
+      const params = new URLSearchParams(window.location.search);
+      const participantID = params.get('participantID') || localStorage.getItem('participantID');
+      const systemID = params.get('systemID') || '';
+      window.location.href = `/study-workflow.html?participantID=${participantID}&systemID=${systemID}`;
+    });
+  </script>
+</body>
+</html>
