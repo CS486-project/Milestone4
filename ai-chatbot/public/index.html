@@ -15,6 +15,22 @@
     </form>
 
     <script>
+        // If the landing page is opened with ?participantID=X (and optionally
+        // &systemID=Y) in the URL, skip the manual form and go straight to
+        // the study workflow. Lets the moderator distribute one direct URL
+        // per participant.
+        (function autoRedirectIfPidInUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlPID = urlParams.get('participantID');
+            if (!urlPID) return;
+            const urlSysID = urlParams.get('systemID')
+                || (parseInt(urlPID) % 2 === 1 ? 1 : 2);
+            localStorage.setItem('participantID', urlPID);
+            window.location.replace(
+                `/study-workflow.html?participantID=${urlPID}&systemID=${urlSysID}`
+            );
+        })();
+
         document.getElementById('participant-form').addEventListener('submit', function(event) {
             event.preventDefault();
 
