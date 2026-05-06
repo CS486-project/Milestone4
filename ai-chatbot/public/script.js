@@ -13,6 +13,12 @@ const params = new URLSearchParams(window.location.search);
 const participantID = params.get('participantID') || localStorage.getItem('participantID');
 const systemID = params.get('systemID');
 
+// Mark the body so CSS can hide enhanced-only features for baseline participants.
+const isBaseline = parseInt(systemID) === 1;
+if (isBaseline && document.body) {
+    document.body.classList.add('baseline');
+}
+
 // Prototype button and Task button
 const prototypeBtn = document.getElementById('prototype-btn');
 if (prototypeBtn) {
@@ -75,7 +81,7 @@ async function sendMessage(inputElement) {
             }
 
             const data = await response.json();
-            appendBotMessage(data.botResponse, data.confidenceMetrics, data.retrievedDocuments);
+            appendBotMessage(data.botResponse, data.confidenceMetrics, data.retrievedDocuments, data.hasDocuments);
 
             // Add bot response to conversation history
             conversationHistory.push({ role: 'assistant', content: data.botResponse });
@@ -113,7 +119,7 @@ function splitTradeoffs(text) {
     return { mainText, tradeoffs: bullets };
 }
 
-function appendBotMessage(text, confidenceMetrics, retrievedDocuments) {
+function appendBotMessage(text, confidenceMetrics, retrievedDocuments, hasDocuments) {
     const bubbleId = `bot-msg-${++botMessageCounter}`;
     const bubble = document.createElement('div');
     bubble.className = 'msg msg-bot';
@@ -121,15 +127,17 @@ function appendBotMessage(text, confidenceMetrics, retrievedDocuments) {
 
     const { mainText, tradeoffs } = splitTradeoffs(text);
 
-    bubble.draggable = true;
-    bubble.addEventListener('dragstart', (e) => {
-        const dragText = tradeoffs && tradeoffs.length > 0
-            ? mainText + '\n\nTrade-offs:\n' + tradeoffs.map(t => '- ' + t).join('\n')
-            : mainText;
-        e.dataTransfer.effectAllowed = 'copy';
-        e.dataTransfer.setData('application/x-bot-message', dragText);
-        e.dataTransfer.setData('text/plain', dragText);
-    });
+    if (!isBaseline) {
+        bubble.draggable = true;
+        bubble.addEventListener('dragstart', (e) => {
+            const dragText = tradeoffs && tradeoffs.length > 0
+                ? mainText + '\n\nTrade-offs:\n' + tradeoffs.map(t => '- ' + t).join('\n')
+                : mainText;
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('application/x-bot-message', dragText);
+            e.dataTransfer.setData('text/plain', dragText);
+        });
+    }
 
     const body = document.createElement('div');
     body.className = 'msg-text';
@@ -156,7 +164,11 @@ function appendBotMessage(text, confidenceMetrics, retrievedDocuments) {
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
 
-    if (confidenceMetrics) {
+    const showChip = confidenceMetrics && (
+        hasDocuments === true ||
+        (retrievedDocuments && retrievedDocuments.length > 0)
+    );
+    if (showChip) {
         const pct = confidenceMetrics.overallConfidence * 100;
         const chip = document.createElement('span');
         chip.className = 'confidence-chip ' + confidenceLevel(pct);
@@ -198,6 +210,7 @@ function appendBotMessage(text, confidenceMetrics, retrievedDocuments) {
 let quillEditor = null;
 
 function setupScratchpadEditor() {
+    if (isBaseline) return;
     const container = document.getElementById('scratchpad-editor');
     if (!container || typeof Quill === 'undefined') return;
 
@@ -259,6 +272,9 @@ function setupScratchpadEditor() {
 
 function renderTextWithCitationChips(text, bubbleId, sourceCount) {
     const escaped = escapeHtml(text);
+    if (isBaseline) {
+        return escaped;
+    }
     return escaped.replace(/\[Source\s+(\d+)\]/gi, (match, n) => {
         const idx = parseInt(n, 10);
         if (idx < 1 || idx > sourceCount) {
@@ -318,6 +334,7 @@ async function loadConversationHistory() {
 }
 
 function setupScratchpadToggle() {
+    if (isBaseline) return;
     const scratchpad = document.getElementById('scratchpad');
     const toggle = document.getElementById('scratchpad-toggle');
     if (!scratchpad || !toggle) return;
@@ -494,26 +511,36 @@ async function deleteDocument(id, filename) {
 
 loadDocuments();
 
-// redirection to the qualtrics questionnaire
-function redirectToQualtrics() {
+// Generic redirect to a Qualtrics survey by surveyType.
+function redirectToQualtrics(surveyType) {
     fetch('/redirect-to-survey', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantID })
+      body: JSON.stringify({ participantID, surveyType })
     })
       .then(response => response.text())
       .then(url => {
-        logEvent('redirect', 'Qualtrics Survey');
+        logEvent('redirect', `Qualtrics Survey: ${surveyType}`);
         window.location.href = url;
       })
       .catch(error => {
         console.error('Error redirecting to survey:', error);
         alert('There was an error redirecting to the survey. Please try again.');
       });
-  }
+}
 
-  // Connecting qualtrics to my button
-  const surveyBtn = document.getElementById('survey-btn');
-  if (surveyBtn) {
-    surveyBtn.addEventListener('click', redirectToQualtrics);
-  }
+// Wire each study-workflow button to its survey.
+const surveyBtn = document.getElementById('survey-btn');
+if (surveyBtn) {
+    surveyBtn.addEventListener('click', () => redirectToQualtrics('demographics'));
+}
+
+const posttaskBtn = document.getElementById('posttask-btn');
+if (posttaskBtn) {
+    posttaskBtn.addEventListener('click', () => redirectToQualtrics('posttask'));
+}
+
+const usabilityBtn = document.getElementById('usability-btn');
+if (usabilityBtn) {
+    usabilityBtn.addEventListener('click', () => redirectToQualtrics('usability'));
+}

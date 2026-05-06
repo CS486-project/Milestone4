@@ -65,6 +65,10 @@ req.body;
     try {
         console.log(`Processing query: "${userInput}" for participant: ${participantID}`);
 
+        const isBaselineRequest = parseInt(systemID) === 1;
+
+        const hasDocuments = !!(await Document.exists({ participantID }));
+
         const topK = await retrievalService.retrieve(userInput, {
           method: retrievalMethod,
           topK: 5,
@@ -80,7 +84,7 @@ req.body;
             ).join("\n\n---\n\n")
           : null;
 
-        const prompt = context
+        let prompt = context
           ? `You are a travel planner that helps the user build trips, itineraries, and recommendations using the SOURCES below. The sources come from PDF travel guides the user uploaded.
 
 YOUR JOB: Take the facts in the SOURCES (landmarks, neighborhoods, transport tips, foods, hours, prices, etiquette, etc.) and organize them into a useful answer to the user's request — e.g. a day-by-day itinerary, a packing list, a budget breakdown, a shortlist of recommendations.
@@ -108,9 +112,26 @@ ${context}
 QUESTION: ${userInput}
 
 ANSWER (organized, with [Source N] citations on each fact, and a TRADE-OFFS section at the end if applicable):`
-          : `You are a travel assistant. The user asked: "${userInput}"
+          : `You are a friendly travel assistant. The user said: "${userInput}"
 
-No relevant content was found in the uploaded documents for this question. Reply honestly: tell the user no uploaded document covers their question, and suggest they upload a document on this topic. Do NOT answer from general knowledge.`;
+There are no uploaded documents yet, so you cannot ground travel facts in sources.
+
+How to respond:
+- If the user is greeting you, making small talk, or asking how to use the system, reply naturally and warmly. Briefly let them know you can help plan trips once they upload travel documents (PDF guides, visa info, budget breakdowns, etc.).
+- If the user is asking a substantive travel question (a destination, an itinerary, prices, customs, visas), tell them you'd love to help but you need them to upload a relevant travel document first. Do NOT answer travel facts from general knowledge.
+- Keep the reply short and conversational. Do not lecture.`;
+
+        // Baseline override: when systemID === 1 and we have context, replace the
+        // strict enhanced prompt with a softer prompt that does not require
+        // [Source N] citations or a TRADE-OFFS section.
+        if (isBaselineRequest && context) {
+            prompt = `You are a travel assistant. The user has uploaded travel documents. Refer to the SOURCES below when answering the user's question.
+
+SOURCES:
+${context}
+
+QUESTION: ${userInput}`;
+        }
 
         const safeHistory = Array.isArray(history)
           ? history
@@ -159,7 +180,7 @@ No relevant content was found in the uploaded documents for this question. Reply
     
         await interaction.save(); // Save the interaction to MongoDB
     
-        res.json({ botResponse, retrievedDocuments, confidenceMetrics });
+        res.json({ botResponse, retrievedDocuments, confidenceMetrics, hasDocuments });
     
     } catch (error) {
         console.error('Error interacting with OpenAI API:', error.message);
@@ -280,14 +301,22 @@ app.delete("/documents/:id", async (req, res) => {
 
 // const PORT = process.env.PORT || 30003w5
 
-// Qualtrics link update in server
+// Qualtrics survey URLs per surveyType.
+const SURVEY_URLS = {
+  demographics: 'https://usfca.qualtrics.com/jfe/form/SV_0HAvrRsPZS6bdP0',
+  posttask:     'https://usfca.qualtrics.com/jfe/form/SV_8p5rOWH0ArN0yTc',
+  usability:    'https://usfca.qualtrics.com/jfe/form/SV_e3sF7XrBIiLYzUG'
+};
+
 app.post('/redirect-to-survey', (req, res) => {
-  const { participantID } = req.body;
+  const { participantID, surveyType = 'demographics' } = req.body;
 
-  const qualtricsBaseUrl = 'https://usfca.qualtrics.com/jfe/form/SV_9H6nrWKbISJ2Zh4';
+  const baseUrl = SURVEY_URLS[surveyType];
+  if (!baseUrl) {
+    return res.status(400).send(`Unknown surveyType: ${surveyType}`);
+  }
 
-  const surveyUrl = `${qualtricsBaseUrl}?participantID=${encodeURIComponent(participantID)}`;
-
+  const surveyUrl = `${baseUrl}?participantID=${encodeURIComponent(participantID)}`;
   res.send(surveyUrl);
 });
 
