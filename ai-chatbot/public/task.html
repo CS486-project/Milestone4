@@ -5,43 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Task</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
 </head>
-<body>
-  <h1>Your Task</h1>
+<body id="task-page">
+  <section id="task-card">
+    <h1>Your Task</h1>
 
-  <section class="task-scenario">
-    <h2>Scenario</h2>
-    <p>
-      You and three friends are planning a trip to Europe together, but you each
-      have very different priorities. One of you cares most about <strong>nightlife</strong>,
-      another about <strong>history and culture</strong>, another has a
-      <strong>tight budget</strong>, and the last has <strong>dietary restrictions</strong>
-      (e.g., vegetarian or halal).
-    </p>
-    <p>
-      You will use an AI travel assistant to help your group reach a decision
-      everyone can live with.
-    </p>
+    <section class="task-block">
+      <h2>Scenario</h2>
+      <p>
+        You and three friends are planning a trip to Europe together, but you each
+        have very different priorities. One of you cares most about <strong>nightlife</strong>,
+        another about <strong>history and culture</strong>, another has a
+        <strong>tight budget</strong>, and the last has <strong>dietary restrictions</strong>
+        (e.g., vegetarian or halal).
+      </p>
+      <p>
+        You will use an AI travel assistant to help your group reach a decision
+        everyone can live with.
+      </p>
+    </section>
+
+    <section class="task-block">
+      <h2>Your Goal</h2>
+      <p>
+        Using the shared travel documents and the AI system, agree on a single European
+        city that works for everyone. Be ready to explain how the destination addresses
+        each person's priority.
+      </p>
+    </section>
+
+    <button id="task-continue-btn" class="workflow-btn" type="button">
+      I have read the task — return to study workflow
+    </button>
   </section>
-
-  <section class="task-goal">
-    <h2>Your Goal</h2>
-    <p>
-      Using the shared travel documents and the AI system, agree on a single European
-      city that works for everyone. Be ready to explain how the destination addresses
-      each person's priority.
-    </p>
-  </section>
-
-  <button id="task-continue-btn" class="workflow-btn" type="button">
-    I have read the task — return to study workflow
-  </button>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const participantID = params.get('participantID') || localStorage.getItem('participantID');
+    const systemID = params.get('systemID') || '';
+
+    // Block the browser Back arrow so the participant cannot leave the task
+    // page without explicitly clicking Continue. We push a state on load and
+    // re-push it on every popstate, trapping the user on this page until they
+    // navigate forward via the Continue button.
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', () => {
+        history.pushState(null, '', location.href);
+        alert('Please click "I have read the task" to continue.');
+    });
+
     document.getElementById('task-continue-btn').addEventListener('click', () => {
-      const params = new URLSearchParams(window.location.search);
-      const participantID = params.get('participantID') || localStorage.getItem('participantID');
-      const systemID = params.get('systemID') || '';
+      // Mark step 2 done — this is the only path that records task completion.
+      const progressKey = `flow-progress-${participantID}`;
+      let progress = {};
+      try { progress = JSON.parse(localStorage.getItem(progressKey)) || {}; } catch (e) {}
+      progress.step2 = true;
+      localStorage.setItem(progressKey, JSON.stringify(progress));
+
       window.location.href = `/study-workflow.html?participantID=${participantID}&systemID=${systemID}`;
     });
   </script>

@@ -32,6 +32,127 @@ body#home #participant-section {
     box-sizing: border-box;
 }
 
+/* Study Workflow page: centered card matching chat page aesthetic */
+body#workflow {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+#workflow-card {
+    padding: 24px 32px;
+    margin: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    max-width: 600px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#workflow-card h1 {
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #0f7bd4;
+    color: #0f4d83;
+}
+
+#workflow-card > p {
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+#workflow-list {
+    padding-left: 24px;
+    margin: 0;
+}
+
+#workflow-list li {
+    margin-bottom: 16px;
+}
+
+#workflow-list li:last-child {
+    margin-bottom: 0;
+}
+
+#workflow-list li::marker {
+    color: #0f7bd4;
+    font-weight: 600;
+}
+
+.workflow-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #0f7bd4;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.95em;
+    text-align: left;
+    transition: background-color 0.15s ease;
+}
+
+.workflow-btn:hover {
+    background-color: #0969ca;
+}
+
+/* Task page: same centered card aesthetic as workflow page */
+body#task-page {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+#task-card {
+    padding: 24px 32px;
+    margin: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    max-width: 720px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#task-card h1 {
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #0f7bd4;
+    color: #0f4d83;
+}
+
+#task-card h2 {
+    color: #0f4d83;
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+#task-card .task-block {
+    margin-bottom: 20px;
+}
+
+#task-card .task-block:last-of-type {
+    margin-bottom: 24px;
+}
+
+#task-card .task-block p {
+    color: #333;
+    line-height: 1.55;
+    margin: 0 0 8px;
+}
+
+#task-continue-btn {
+    text-align: center;
+}
+
 #doc-panel,
 #chat-container,
 #scratchpad {

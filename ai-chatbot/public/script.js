@@ -19,10 +19,37 @@ if (isBaseline && document.body) {
     document.body.classList.add('baseline');
 }
 
+// ---- Workflow progress gating ----
+// Each step must be completed before the next can be entered. Progress is
+// stored in localStorage keyed to the participant ID so survives reloads.
+const progressKey = `flow-progress-${participantID}`;
+
+function getProgress() {
+    try { return JSON.parse(localStorage.getItem(progressKey)) || {}; }
+    catch (e) { return {}; }
+}
+
+function markStepDone(step) {
+    const p = getProgress();
+    p[step] = true;
+    localStorage.setItem(progressKey, JSON.stringify(p));
+}
+
+function requirePrevStep(prevStep, prevStepLabel) {
+    const p = getProgress();
+    if (!p[prevStep]) {
+        alert(`Please complete step "${prevStepLabel}" before moving on.`);
+        return false;
+    }
+    return true;
+}
+
 // Prototype button and Task button
 const prototypeBtn = document.getElementById('prototype-btn');
 if (prototypeBtn) {
     prototypeBtn.addEventListener('click', () => {
+        if (!requirePrevStep('step2', 'Read the task')) return;
+        markStepDone('step3');
         window.location.href = `/chat.html?participantID=${participantID}&systemID=${systemID}`;
     });
 }
@@ -30,6 +57,10 @@ if (prototypeBtn) {
 const taskBtn = document.getElementById('task-btn');
 if (taskBtn) {
     taskBtn.addEventListener('click', () => {
+        if (!requirePrevStep('step1', 'Complete the demographics & pre-task questionnaire')) return;
+        // step2 is only marked done after the participant clicks Continue on
+        // the task page itself, so back-arrowing out of /task.html does not
+        // count as completing the task.
         window.location.href = `/task.html?participantID=${participantID}&systemID=${systemID}`;
     });
 }
@@ -529,18 +560,30 @@ function redirectToQualtrics(surveyType) {
       });
 }
 
-// Wire each study-workflow button to its survey.
+// Wire each study-workflow survey button: gate on previous step + mark current done.
 const surveyBtn = document.getElementById('survey-btn');
 if (surveyBtn) {
-    surveyBtn.addEventListener('click', () => redirectToQualtrics('demographics'));
+    surveyBtn.addEventListener('click', () => {
+        // Step 1 has no prerequisite.
+        markStepDone('step1');
+        redirectToQualtrics('demographics');
+    });
 }
 
 const posttaskBtn = document.getElementById('posttask-btn');
 if (posttaskBtn) {
-    posttaskBtn.addEventListener('click', () => redirectToQualtrics('posttask'));
+    posttaskBtn.addEventListener('click', () => {
+        if (!requirePrevStep('step3', 'Use the AI system')) return;
+        markStepDone('step4');
+        redirectToQualtrics('posttask');
+    });
 }
 
 const usabilityBtn = document.getElementById('usability-btn');
 if (usabilityBtn) {
-    usabilityBtn.addEventListener('click', () => redirectToQualtrics('usability'));
+    usabilityBtn.addEventListener('click', () => {
+        if (!requirePrevStep('step4', 'Complete the post-task questionnaire')) return;
+        markStepDone('step5');
+        redirectToQualtrics('usability');
+    });
 }
