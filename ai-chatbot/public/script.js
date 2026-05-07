@@ -19,6 +19,14 @@ if (isBaseline && document.body) {
     document.body.classList.add('baseline');
 }
 
+// Wire the chat-page "back to workflow" button (only present on chat.html).
+const backToWorkflowBtn = document.getElementById('back-to-workflow-btn');
+if (backToWorkflowBtn) {
+    backToWorkflowBtn.addEventListener('click', () => {
+        window.location.href = `/study-workflow.html?participantID=${participantID}&systemID=${systemID}`;
+    });
+}
+
 // ---- Workflow progress gating ----
 // Each step must be completed before the next can be entered. Progress is
 // stored in localStorage keyed to the participant ID so survives reloads.
@@ -456,31 +464,65 @@ function logEvent(type, element) {
 const uploadBtn = document.getElementById("upload-btn");
 if (uploadBtn) {
     uploadBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
-    logEvent('click', 'Upload Button');
+        event.preventDefault();
+        logEvent('click', 'Upload Button');
 
-    const fileInput = document.getElementById("file-input");
-    const file = fileInput.files[0];
+        const fileInput = document.getElementById("file-input");
+        const file = fileInput.files[0];
 
-    if (!file) {
-        alert("Choose a file first.");
-        return;
-    }
-    console.log("Selected file: ", file.name);
-  
-    const formData = new FormData();
-    formData.append("document", file);
-    formData.append("participantID", participantID);
+        if (!file) {
+            alert("Choose a file first.");
+            return;
+        }
+        console.log("Selected file: ", file.name);
 
-    const response = await fetch("/upload-document", {
-        method: "POST",
-        body: formData
-    });
-  
-    const data = await response.json();
-    console.log(data);
-    
-    await loadDocuments();
+        // ---- show loading state ----
+        const originalText = uploadBtn.textContent;
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading...";
+
+        // Add a temporary "uploading" placeholder row to the docs list so the
+        // user sees immediate feedback while embedding runs in the background.
+        const documentsList = document.getElementById('documents-list');
+        const placeholder = document.getElementById('uploaded-docs-placeholder');
+        let tempLi = null;
+        if (documentsList) {
+            if (placeholder) placeholder.style.display = 'none';
+            tempLi = document.createElement('li');
+            tempLi.className = 'doc-item doc-uploading';
+            tempLi.innerHTML = `<span><span class="upload-spinner"></span> Uploading <strong>${file.name}</strong>...</span>`;
+            documentsList.appendChild(tempLi);
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("document", file);
+            formData.append("participantID", participantID);
+
+            const response = await fetch("/upload-document", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed (${response.status})`);
+            }
+
+            const data = await response.json();
+            console.log(data);
+
+            // Clear the file input so the user can immediately pick the next file.
+            fileInput.value = '';
+
+            await loadDocuments();
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert(`Upload failed for "${file.name}". Please try again.`);
+            if (tempLi && tempLi.parentNode) tempLi.parentNode.removeChild(tempLi);
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = originalText;
+        }
     });
 }
 

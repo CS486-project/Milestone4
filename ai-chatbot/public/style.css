@@ -153,6 +153,113 @@ body#task-page {
     text-align: center;
 }
 
+.task-docs {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-docs a {
+    display: inline-block;
+    padding: 10px 14px;
+    background-color: #e7f1fb;
+    color: #0f4d83;
+    border: 1px solid #b9d4ec;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+}
+
+.task-docs a:hover {
+    background-color: #d1e3f5;
+}
+
+.task-docs a::before {
+    content: "↓ ";
+    font-weight: 600;
+}
+
+.task-tips {
+    margin: 8px 0 12px;
+    padding-left: 22px;
+    color: #333;
+    line-height: 1.55;
+}
+
+.task-tips li {
+    margin-bottom: 10px;
+}
+
+.task-tips li strong {
+    color: #0f4d83;
+}
+
+.task-tips li em {
+    color: #555;
+    font-style: italic;
+    background-color: #f4f8fc;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+/* Upload spinner + uploading-state row */
+.doc-uploading {
+    background-color: #fff7c2 !important;
+    border-color: #f1d188 !important;
+    color: #8a5b00;
+    font-style: italic;
+}
+
+.upload-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border: 2px solid #d8b769;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#upload-btn:disabled {
+    background-color: #9bbfa0;
+    cursor: wait;
+}
+
+/* Floating Back-to-Workflow button on the chat page */
+#back-to-workflow-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    padding: 8px 14px;
+    background-color: #ffffff;
+    color: #0f4d83;
+    border: 1px solid #b9d4ec;
+    border-radius: 8px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#back-to-workflow-btn:hover {
+    background-color: #0f7bd4;
+    color: #ffffff;
+    border-color: #0f7bd4;
+}
+
 #doc-panel,
 #chat-container,
 #scratchpad {
@@ -371,6 +478,8 @@ body.baseline .sources {
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-self: flex-start;
+    max-height: calc(100vh - 32px);
 }
 
 #doc-panel h2,
